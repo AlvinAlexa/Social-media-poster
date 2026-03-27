@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Sports Stream Scheduler · Multi-Platform Publisher</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at 10% 20%, #0a0f1e, #03060c);
+      min-height: 100vh;
+      padding: 2rem 1.5rem;
+      color: #eef2ff;
+    }
+
+    /* main container */
+    .app-container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* header */
+    .sport-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+      border-bottom: 3px solid #e25822;
+      padding-bottom: 0.75rem;
+    }
+    .sport-header h1 {
+      font-size: 1.9rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #f97316, #ffb347);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.5px;
+    }
+    .sport-header p {
+      color: #9ca3af;
+      font-size: 0.85rem;
+    }
+
+    /* card grid */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 1.8rem;
+      margin-bottom: 2rem;
+    }
+
+    /* card style */
+    .card {
+      background: rgba(12, 18, 28, 0.85);
+      backdrop-filter: blur(2px);
+      border-radius: 28px;
+      border: 1px solid rgba(226, 88, 34, 0.35);
+      box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.6);
+      padding: 1.5rem 1.5rem;
+      transition: all 0.2s;
+    }
+    .card:hover {
+      border-color: #e25822;
+      box-shadow: 0 8px 20px rgba(226, 88, 34, 0.2);
+    }
+    .card-title {
+      font-size: 1.4rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1.2rem;
+      border-left: 4px solid #e25822;
+      padding-left: 0.75rem;
+    }
+    label {
+      font-weight: 500;
+      display: block;
+      margin: 0.75rem 0 0.3rem 0;
+      font-size: 0.85rem;
+      letter-spacing: 0.3px;
+      color: #cbd5e6;
+    }
+    input, textarea, select, .datetime-input {
+      width: 100%;
+      background: #0f1420;
+      border: 1px solid #2d3748;
+      border-radius: 16px;
+      padding: 0.75rem 1rem;
+      color: white;
+      font-size: 0.9rem;
+      outline: none;
+      transition: 0.2s;
+    }
+    input:focus, textarea:focus {
+      border-color: #e25822;
+      box-shadow: 0 0 0 2px rgba(226, 88, 34, 0.3);
+    }
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    .checkbox-group {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin: 0.8rem 0;
+      background: #0a0f17;
+      padding: 0.8rem;
+      border-radius: 20px;
+    }
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      cursor: pointer;
+    }
+    button {
+      background: #e25822;
+      border: none;
+      color: white;
+      font-weight: bold;
+      padding: 0.7rem 1.2rem;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 0.6rem;
+    }
+    button.secondary {
+      background: #2c3e50;
+      border: 1px solid #e25822;
+    }
+    button.small {
+      padding: 0.4rem 1rem;
+      font-size: 0.75rem;
+    }
+    button:hover {
+      background: #ff6a2e;
+      transform: translateY(-2px);
+    }
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+    /* table queue */
+    .queue-section {
+      margin-top: 2rem;
+    }
+    .queue-table-wrapper {
+      overflow-x: auto;
+      border-radius: 24px;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 0.5rem 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    th, td {
+      padding: 0.9rem 0.8rem;
+      text-align: left;
+      border-bottom: 1px solid #2a3342;
+    }
+    th {
+      color: #ffb347;
+      font-weight: 600;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 0.2rem 0.7rem;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-weight: bold;
+    }
+    .status-pending { background: #f59e0b20; color: #fbbf24; border: 1px solid #f59e0b; }
+    .status-sent { background: #10b98120; color: #34d399; border: 1px solid #10b981; }
+    .status-failed { background: #ef444420; color: #f87171; border: 1px solid #ef4444; }
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #ef4444;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0 6px;
+      margin: 0;
+    }
+    .collapsible {
+      background: #0e1622;
+      border-radius: 20px;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      padding: 0.8rem 1.2rem;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+    }
+    .collapsible-content {
+      display: none;
+      padding: 1rem 0.5rem;
+    }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #1e2a3a;
+      border-left: 6px solid #e25822;
+      padding: 12px 20px;
+      border-radius: 50px;
+      color: white;
+      z-index: 1000;
+      font-size: 0.85rem;
+      animation: fadein 0.3s;
+    }
+    @keyframes fadein { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+    hr { border-color: #2d3748; margin: 0.5rem 0; }
+    .flex-between { display: flex; justify-content: space-between; align-items: center; }
+    .masked-input { font-family: monospace; letter-spacing: 1px; }
+    small { color: #9ca3af; font-size: 0.7rem; }
+  </style>
+</head>
+<body>
+<div class="app-container">
+  <div class="sport-header">
+    <h1>⚡ LIVESTREAM POST COMMANDER</h1>
+    <p>📡 Telegram · Twitter/X · Facebook | Schedule & Auto-Publish</p>
+  </div>
+
+  <!-- MAIN PANEL: create post -->
+  <div class="grid-2col">
+    <!-- left: post composer -->
+    <div class="card">
+      <div class="card-title">✍️ CREATE POST</div>
+      <label>📝 Post content (text)</label>
+      <textarea id="postText" placeholder="🔥 Real Madrid vs Barcelona – Live stream link: https://sports803livestream.blogspot.com/?m=1 ..."></textarea>
+      <label>🖼️ Image URL (optional)</label>
+      <input type="text" id="imageUrl" placeholder="https://example.com/stream-preview.jpg">
+      <label>⏰ Schedule date & time</label>
+      <input type="datetime-local" id="scheduleDateTime" class="datetime-input">
+      <label>📱 Publish to:</label>
+      <div class="checkbox-group">
+        <label><input type="checkbox" id="platformTelegram" value="telegram"> 📨 Telegram</label>
+        <label><input type="checkbox" id="platformTwitter" value="twitter"> 🐦 Twitter/X</label>
+        <label><input type="checkbox" id="platformFacebook" value="facebook"> 📘 Facebook</label>
+      </div>
+      <div class="action-buttons">
+        <button id="scheduleBtn">📅 SCHEDULE POST</button>
+        <button id="postNowBtn" class="secondary">⚡ POST NOW</button>
+      </div>
+    </div>
+
+    <!-- right: settings & credentials (collapsible) -->
+    <div class="card">
+      <div class="card-title">🔐 API CREDENTIALS</div>
+      <div class="collapsible" id="toggleSettings">▼ PLATFORM KEYS (click to expand) <span>▼</span></div>
+      <div id="settingsPanel" class="collapsible-content">
+        <!-- TELEGRAM -->
+        <label>🤖 Telegram Bot Token</label>
+        <input type="password" id="telegramToken" placeholder="123456:ABC-DEF..." class="masked-input">
+        <label>📢 Telegram Chat ID (channel/group)</label>
+        <input type="text" id="telegramChatId" placeholder="-100123456789 or @channel">
+        
+        <hr>
+        <!-- TWITTER/X (OAuth 2.0 Bearer Token, text-only due to CORS/limitations but uses proxy option) -->
+        <label>🐦 Twitter Bearer Token (OAuth 2.0) <small>text + image link (no media upload)</small></label>
+        <input type="password" id="twitterBearer" placeholder="AAAAAAAAAAAAAAAAAAAA...">
+        <label>🔄 CORS Proxy (optional, e.g., https://corsproxy.io/? )</label>
+        <input type="text" id="twitterProxy" placeholder="https://cors-anywhere.herokuapp.com/">
+        <small>⚠️ Twitter API lacks CORS; use a proxy to post. If empty, direct call may fail.</small>
+        
+        <hr>
+        <!-- FACEBOOK -->
+        <label>📘 Facebook Page Access Token</label>
+        <input type="password" id="fbToken" placeholder="EAAJ...">
+        <label>🆔 Facebook Page ID</label>
+        <input type="text" id="fbPageId" placeholder="1234567890">
+        <div class="flex-between" style="margin-top: 12px;">
+          <button id="saveCredsBtn" class="small">💾 Save credentials</button>
+          <button id="clearCredsBtn" class="small secondary">🗑️ Clear all</button>
+        </div>
+      </div>
+      <div class="flex-between" style="margin-top: 15px;"><small>✅ Credentials stored locally (encrypted in your browser)</small></div>
+    </div>
+  </div>
+
+  <!-- Scheduled posts queue table -->
+  <div class="queue-section card" style="margin-top: 0.5rem;">
+    <div class="flex-between">
+      <div class="card-title">📋 SCHEDULED QUEUE & HISTORY</div>
+      <button id="refreshQueueBtn" class="small secondary">⟳ Refresh</button>
+    </div>
+    <div class="queue-table-wrapper">
+      <table id="postsTable">
+        <thead>
+          <tr><th>Content snippet</th><th>Platforms</th><th>Scheduled time</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="queueTbody">
+          <tr><td colspan="5" style="text-align:center;">Loading posts...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---------- STORAGE KEYS ----------
+  const STORAGE_CREDS = "sports_scheduler_creds";
+  const STORAGE_POSTS = "sports_scheduled_posts";
+
+  // Global state
+  let scheduledPosts = [];   // each: { id, text, imageUrl, platforms, scheduledTime, status, sentTime, errorMsg }
+
+  // Helper: show toast
+  function showToast(msg, isError = false) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerText = msg;
+    toast.style.background = isError ? '#7f1a1a' : '#1e4620';
+    toast.style.borderLeftColor = isError ? '#ef4444' : '#2ecc71';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+  }
+
+  // Save posts to localStorage
+  function persistPosts() {
+    localStorage.setItem(STORAGE_POSTS, JSON.stringify(scheduledPosts));
+    renderQueueTable();
+  }
+
+  // Load credentials
+  function loadCredentials() {
+    const creds = localStorage.getItem(STORAGE_CREDS);
+    if (creds) {
+      try {
+        const c = JSON.parse(creds);
+        document.getElementById('telegramToken').value = c.telegramToken || '';
+        document.getElementById('telegramChatId').value = c.telegramChatId || '';
+        document.getElementById('twitterBearer').value = c.twitterBearer || '';
+        document.getElementById('twitterProxy').value = c.twitterProxy || '';
+        document.getElementById('fbToken').value = c.fbToken || '';
+        document.getElementById('fbPageId').value = c.fbPageId || '';
+      } catch(e) {}
+    }
+  }
+  function saveCredentialsToStorage() {
+    const creds = {
+      telegramToken: document.getElementById('telegramToken').value.trim(),
+      telegramChatId: document.getElementById('telegramChatId').value.trim(),
+      twitterBearer: document.getElementById('twitterBearer').value.trim(),
+      twitterProxy: document.getElementById('twitterProxy').value.trim(),
+      fbToken: document.getElementById('fbToken').value.trim(),
+      fbPageId: document.getElementById('fbPageId').value.trim(),
+    };
+    localStorage.setItem(STORAGE_CREDS, JSON.stringify(creds));
+    showToast("✅ API credentials saved");
+  }
+  function clearCredentials() {
+    localStorage.removeItem(STORAGE_CREDS);
+    document.getElementById('telegramToken').value = '';
+    document.getElementById('telegramChatId').value = '';
+    document.getElementById('twitterBearer').value = '';
+    document.getElementById('twitterProxy').value = '';
+    document.getElementById('fbToken').value = '';
+    document.getElementById('fbPageId').value = '';
+    showToast("Credentials cleared");
+  }
+
+  // ---------- PLATFORM PUBLISHERS ----------
+  async function publishToTelegram(text, imageUrl) {
+    const token = document.getElementById('telegramToken').value.trim();
+    const chatId = document.getElementById('telegramChatId').value.trim();
+    if (!token || !chatId) throw new Error("Telegram credentials missing");
+    const baseUrl = `https://api.telegram.org/bot${token}`;
+    if (imageUrl && imageUrl.trim() !== "") {
+      const url = `${baseUrl}/sendPhoto`;
+      const params = new URLSearchParams();
+      params.append('chat_id', chatId);
+      params.append('photo', imageUrl);
+      params.append('caption', text.substring(0, 1024));
+      const resp = await fetch(url, { method: 'POST', body: params });
+      if (!resp.ok) {
+        const err = await resp.text();
+        throw new Error(`Telegram photo error: ${err}`);
+      }
+      return true;
+    } else {
+      const url = `${baseUrl}/sendMessage`;
+      const params = new URLSearchParams();
+      params.append('chat_id', chatId);
+      params.append('text', text);
+      params.append('parse_mode', 'HTML');
+      const resp = await fetch(url, { method: 'POST', body: params });
+      if (!resp.ok) throw new Error(`Telegram msg error: ${resp.status}`);
+      return true;
+    }
+  }
+
+  async function publishToFacebook(text, imageUrl) {
+    const token = document.getElementById('fbToken').value.trim();
+    const pageId = document.getElementById('fbPageId').value.trim();
+    if (!token || !pageId) throw new Error("Facebook credentials missing");
+    if (imageUrl && imageUrl.trim() !== "") {
+      // post as photo with caption
+      const url = `https://graph.facebook.com/v18.0/${pageId}/photos`;
+      const form = new URLSearchParams();
+      form.append('url', imageUrl);
+      form.append('caption', text);
+      form.append('access_token', token);
+      const resp = await fetch(url, { method: 'POST', body: form });
+      if (!resp.ok) {
+        const errData = await resp.json();
+        throw new Error(`FB photo error: ${errData.error?.message || resp.status}`);
+      }
+      return true;
+    } else {
+      const url = `https://graph.facebook.com/v18.0/${pageId}/feed`;
+      const form = new URLSearchParams();
+      form.append('message', text);
+      form.append('access_token', token);
+      const resp = await fetch(url, { method: 'POST', body: form });
+      if (!resp.ok) {
+        const errData = await resp.json();
+        throw new Error(`FB feed error: ${errData.error?.message || resp.status}`);
+      }
+      return true;
+    }
+  }
+
+  async function publishToTwitter(text, imageUrl) {
+    const bearer = document.getElementById('twitterBearer').value.trim();
+    let proxy = document.getElementById('twitterProxy').value.trim();
+    if (!bearer) throw new Error("Twitter Bearer Token missing");
+    let finalText = text;
+    if (imageUrl && imageUrl.trim() !== "") {
+      finalText = `${text}\n\n📸 Image: ${imageUrl}`;
+    }
+    const tweetPayload = { text: finalText.substring(0, 280) };
+    let targetUrl = "https://api.twitter.com/2/tweets";
+    if (proxy) {
+      if (!proxy.endsWith('/')) proxy = proxy + '/';
+      targetUrl = proxy + targetUrl;
+    }
+    const resp = await fetch(targetUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${bearer}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(tweetPayload)
+    });
+    if (!resp.ok) {
+      const errBody = await resp.text();
+      throw new Error(`Twitter API error ${resp.status}: ${errBody.slice(0, 150)}`);
+    }
+    return true;
+  }
+
+  // main publisher: iterate platforms
+  async function executePublish(post) {
+    const platforms = post.platforms || [];
+    if (platforms.length === 0) throw new Error("No platform selected");
+    const results = [];
+    const errors = [];
+    for (const plat of platforms) {
+      try {
+        if (plat === 'telegram') {
+          await publishToTelegram(post.text, post.imageUrl);
+          results.push("✅ Telegram");
+        } else if (plat === 'twitter') {
+          await publishToTwitter(post.text, post.imageUrl);
+          results.push("✅ Twitter");
+        } else if (plat === 'facebook') {
+          await publishToFacebook(post.text, post.imageUrl);
+          results.push("✅ Facebook");
+        }
+      } catch (err) {
+        console.error(`${plat} error:`, err);
+        errors.push(`${plat}: ${err.message}`);
+      }
+    }
+    if (errors.length > 0 && results.length === 0) throw new Error(errors.join(" | "));
+    return { success: results.join(", "), warnings: errors.length ? errors.join("; ") : null };
+  }
+
+  // schedule / post now logic
+  async function processPost(postObj, isScheduleMode = false) {
+    try {
+      const result = await executePublish(postObj);
+      postObj.status = "sent";
+      postObj.sentTime = new Date().toISOString();
+      postObj.errorMsg = null;
+      persistPosts();
+      showToast(`✅ Posted to ${result.success} ${result.warnings ? `(warnings: ${result.warnings})` : ''}`);
+      return true;
+    } catch (err) {
+      postObj.status = "failed";
+      postObj.errorMsg = err.message;
+      persistPosts();
+      showToast(`❌ Failed: ${err.message}`, true);
+      return false;
+    }
+  }
+
+  function createPostObject(text, imageUrl, platforms, scheduledTimeISO) {
+    return {
+      id: Date.now() + '-' + Math.random().toString(36).substr(2, 6),
+      text: text,
+      imageUrl: imageUrl || "",
+      platforms: platforms,
+      scheduledTime: scheduledTimeISO,
+      status: "pending",
+      sentTime: null,
+      errorMsg: null,
+    };
+  }
+
+  function addScheduledPost(post) {
+    scheduledPosts.push(post);
+    persistPosts();
+  }
+
+  // render queue table
+  function renderQueueTable() {
+    const tbody = document.getElementById('queueTbody');
+    if (!scheduledPosts.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">📭 No scheduled posts yet</td></tr>';
+      return;
+    }
+    tbody.innerHTML = "";
+    scheduledPosts.sort((a,b) => (a.scheduledTime || '').localeCompare(b.scheduledTime || ''));
+    for (let p of scheduledPosts) {
+      const row = tbody.insertRow();
+      const snippet = p.text.length > 55 ? p.text.slice(0, 52) + '...' : p.text;
+      row.insertCell(0).innerHTML = `<span title="${escapeHtml(p.text)}">${escapeHtml(snippet)}</span>`;
+      const platStr = p.platforms.map(pl => pl === 'telegram' ? '📨' : pl === 'twitter' ? '🐦' : '📘').join(' ');
+      row.insertCell(1).innerHTML = platStr || '—';
+      const scheduleDate = p.scheduledTime ? new Date(p.scheduledTime).toLocaleString() : 'Now';
+      row.insertCell(2).innerHTML = scheduleDate;
+      let statusClass = '';
+      if (p.status === 'pending') statusClass = 'status-pending';
+      else if (p.status === 'sent') statusClass = 'status-sent';
+      else statusClass = 'status-failed';
+      const statusText = p.status === 'failed' ? `failed: ${p.errorMsg?.slice(0, 40) || 'err'}` : p.status;
+      row.insertCell(3).innerHTML = `<span class="status-badge ${statusClass}">${statusText}</span>`;
+      const delBtn = document.createElement('button');
+      delBtn.innerHTML = '🗑️';
+      delBtn.className = 'delete-btn';
+      delBtn.onclick = () => deletePost(p.id);
+      const cell = row.insertCell(4);
+      cell.appendChild(delBtn);
+      if (p.status === 'failed') {
+        const retryBtn = document.createElement('button');
+        retryBtn.innerHTML = '↻';
+        retryBtn.className = 'small secondary';
+        retryBtn.style.marginLeft = '6px';
+        retryBtn.style.padding = '0.2rem 0.6rem';
+        retryBtn.onclick = () => retryPost(p.id);
+        cell.appendChild(retryBtn);
+      }
+    }
+  }
+
+  function deletePost(id) {
+    scheduledPosts = scheduledPosts.filter(p => p.id !== id);
+    persistPosts();
+    showToast("Post removed");
+  }
+
+  async function retryPost(id) {
+    const post = scheduledPosts.find(p => p.id === id);
+    if (!post) return;
+    post.status = "pending";
+    post.errorMsg = null;
+    persistPosts();
+    await processPost(post);
+    renderQueueTable();
+  }
+
+  // schedule post from form
+  function getFormPostData() {
+    const text = document.getElementById('postText').value.trim();
+    if (!text) throw new Error("Post text cannot be empty");
+    const imageUrl = document.getElementById('imageUrl').value.trim();
+    const platforms = [];
+    if (document.getElementById('platformTelegram').checked) platforms.push('telegram');
+    if (document.getElementById('platformTwitter').checked) platforms.push('twitter');
+    if (document.getElementById('platformFacebook').checked) platforms.push('facebook');
+    if (platforms.length === 0) throw new Error("Select at least one platform");
+    return { text, imageUrl, platforms };
+  }
+
+  function handleSchedulePost() {
+    try {
+      const { text, imageUrl, platforms } = getFormPostData();
+      let scheduledTime = document.getElementById('scheduleDateTime').value;
+      if (!scheduledTime) throw new Error("Please select date & time for schedule");
+      const scheduledDate = new Date(scheduledTime);
+      if (isNaN(scheduledDate.getTime())) throw new Error("Invalid datetime");
+      if (scheduledDate <= new Date()) throw new Error("Schedule time must be in the future");
+      const post = createPostObject(text, imageUrl, platforms, scheduledDate.toISOString());
+      addScheduledPost(post);
+      showToast(`📅 Post scheduled for ${scheduledDate.toLocaleString()}`);
+      document.getElementById('postText').value = '';
+      document.getElementById('imageUrl').value = '';
+      // optional keep platforms checked but do not reset
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  }
+
+  async function handlePostNow() {
+    try {
+      const { text, imageUrl, platforms } = getFormPostData();
+      const postNow = createPostObject(text, imageUrl, platforms, new Date().toISOString());
+      postNow.status = "pending";
+      scheduledPosts.push(postNow);
+      persistPosts();
+      await processPost(postNow);
+      renderQueueTable();
+      // clear form
+      document.getElementById('postText').value = '';
+      document.getElementById('imageUrl').value = '';
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  }
+
+  // interval scheduler: every 30 seconds
+  function checkDuePosts() {
+    const now = new Date();
+    let changed = false;
+    for (let post of scheduledPosts) {
+      if (post.status !== "pending") continue;
+      if (!post.scheduledTime) continue;
+      const dueTime = new Date(post.scheduledTime);
+      if (dueTime <= now) {
+        changed = true;
+        // execute async without blocking loop
+        (async () => {
+          await processPost(post);
+          renderQueueTable();
+        })();
+      }
+    }
+    if (changed) renderQueueTable();
+  }
+
+  // Helper escape HTML
+  function escapeHtml(str) { 
+    if(!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+
+  // init: load posts, start interval, event listeners
+  function init() {
+    // load posts
+    const stored = localStorage.getItem(STORAGE_POSTS);
+    if (stored) {
+      try {
+        scheduledPosts = JSON.parse(stored);
+        if (!Array.isArray(scheduledPosts)) scheduledPosts = [];
+      } catch(e) { scheduledPosts = []; }
+    } else {
+      scheduledPosts = [];
+    }
+    loadCredentials();
+    renderQueueTable();
+
+    // settings collapsible
+    const toggle = document.getElementById('toggleSettings');
+    const settingsContent = document.getElementById('settingsPanel');
+    toggle.addEventListener('click', () => {
+      if (settingsContent.style.display === 'none' || settingsContent.style.display === '') {
+        settingsContent.style.display = 'block';
+        toggle.innerHTML = '▲ PLATFORM KEYS (click to collapse) ▲';
+      } else {
+        settingsContent.style.display = 'none';
+        toggle.innerHTML = '▼ PLATFORM KEYS (click to expand) ▼';
+      }
+    });
+    settingsContent.style.display = 'none'; // start collapsed
+
+    document.getElementById('saveCredsBtn').addEventListener('click', saveCredentialsToStorage);
+    document.getElementById('clearCredsBtn').addEventListener('click', clearCredentials);
+    document.getElementById('scheduleBtn').addEventListener('click', handleSchedulePost);
+    document.getElementById('postNowBtn').addEventListener('click', handlePostNow);
+    document.getElementById('refreshQueueBtn').addEventListener('click', () => renderQueueTable());
+
+    setInterval(() => {
+      checkDuePosts();
+    }, 30000);
+    // initial check
+    setTimeout(checkDuePosts, 1000);
+  }
+
+  init();
+</script>
+</body>
+</html>
